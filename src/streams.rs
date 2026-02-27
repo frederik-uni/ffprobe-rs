@@ -1,8 +1,11 @@
 use std::time::Duration;
 
 use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, Timelike};
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::Value;
+use serde::{
+    de::{self, IntoDeserializer},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
+use serde_value::Value;
 
 use crate::{
     attachment_stream::AttachmentStream, audio_stream::AudioStream, data_stream::DataStream,
@@ -107,15 +110,14 @@ impl<'de> Deserialize<'de> for StreamKinds {
     where
         D: Deserializer<'de>,
     {
-        let __content = <serde::__private::de::Content as Deserialize>::deserialize(deserializer)?;
-        let deserializer =
-            serde::__private::de::ContentRefDeserializer::<D::Error>::new(&__content);
+        let v = Value::deserialize(deserializer)?;
+        let deserializer = || v.clone().into_deserializer();
         let mut err = None;
-        if let Ok(kind) = StreamKindInfo::deserialize(deserializer) {
+        if let Ok(kind) = StreamKindInfo::deserialize(deserializer()) {
             match kind.codec_type.as_str() {
                 "audio" => {
                     match Result::map(
-                        <AudioStream as Deserialize>::deserialize(deserializer),
+                        <AudioStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Audio,
                     ) {
                         Ok(__ok) => return Ok(__ok),
@@ -124,7 +126,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                 }
                 "video" => {
                     match Result::map(
-                        <VideoStream as Deserialize>::deserialize(deserializer),
+                        <VideoStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Video,
                     ) {
                         Ok(__ok) => return Ok(__ok),
@@ -133,7 +135,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                 }
                 "attachment" => {
                     match Result::map(
-                        <AttachmentStream as Deserialize>::deserialize(deserializer),
+                        <AttachmentStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Attachment,
                     ) {
                         Ok(__ok) => return Ok(__ok),
@@ -142,7 +144,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                 }
                 "data" => {
                     match Result::map(
-                        <DataStream as Deserialize>::deserialize(deserializer),
+                        <DataStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Data,
                     ) {
                         Ok(__ok) => return Ok(__ok),
@@ -151,7 +153,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                 }
                 "subtitle" => {
                     match Result::map(
-                        <SubtitleStream as Deserialize>::deserialize(deserializer),
+                        <SubtitleStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Subtitle,
                     ) {
                         Ok(__ok) => return Ok(__ok),
@@ -161,7 +163,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                 _ => {}
             }
         }
-        let msg = Value::deserialize(deserializer);
+        let msg = Value::deserialize(deserializer());
 
         let msg = match err {
             Some(v) => match msg {
