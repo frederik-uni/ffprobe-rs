@@ -117,4 +117,9 @@ pub struct VideoStream {
     start_time: Option<serde_json::Value>,
     #[cfg(feature = "__internal_deny_unknown_fields")]
     duration: Option<serde_json::Value>,
+    #[serde(deserialize_with = "option_string_to_int", default)]
+    pub max_bit_rate: Option<i64>,
+    pub codec_time_base: Option<Ratio>,
+    #[serde(deserialize_with = "option_string_to_int", default)]
+    pub nal_length: Option<i64>,
 }

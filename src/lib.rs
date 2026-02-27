@@ -97,6 +97,10 @@ pub use subtitle_stream::SubtitleStream;
 pub use video_stream::VideoStream;
 #[cfg(feature = "streams")]
 pub use video_stream::VideoTags;
+
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 /// Execute ffprobe with default settings and return the extracted data.
 ///
 /// See [`ffprobe_config`] if you need to customize settings.
@@ -110,7 +114,7 @@ pub fn ffprobe_config(config: Config, path: impl AsRef<Path>) -> Result<FfProbe,
     let path = path.as_ref();
     let mut cmd = Command::new(config.ffprobe_bin);
     // Default args.
-    cmd.args(["-v", "quiet", "-print_format", "json"]);
+    cmd.args(["-v", "error", "-print_format", "json"]);
     #[cfg(feature = "chapters")]
     cmd.arg("-show_chapters");
     #[cfg(feature = "format")]
@@ -123,6 +127,10 @@ pub fn ffprobe_config(config: Config, path: impl AsRef<Path>) -> Result<FfProbe,
     }
 
     cmd.arg(path);
+
+    // Prevent CMD popup on Windows.
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(0x08000000);
 
     let out = cmd.output().map_err(FfProbeError::Io)?;
 

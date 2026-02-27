@@ -229,6 +229,8 @@ pub struct StreamTags {
     pub vendor_id: Option<String>,
     pub title: Option<String>,
     pub language: Option<String>,
+    pub timecode: Option<String>,
+    pub reel_name: Option<String>,
 }
 
 pub fn option_string_to_int<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
