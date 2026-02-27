@@ -26,7 +26,9 @@
 //! - async
 //!
 
+use std::borrow::Cow;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 
@@ -93,10 +95,45 @@ pub use streams::StreamTags;
 pub use subtitle_stream::SubtititleTags;
 #[cfg(feature = "streams")]
 pub use subtitle_stream::SubtitleStream;
+use url::Url;
 #[cfg(feature = "streams")]
 pub use video_stream::VideoStream;
 #[cfg(feature = "streams")]
 pub use video_stream::VideoTags;
+
+pub trait IntoFfprobeArg<'a> {
+    fn into_ffprobe_arg(self) -> Cow<'a, str>;
+}
+
+impl<'a> IntoFfprobeArg<'a> for &'a Path {
+    fn into_ffprobe_arg(self) -> Cow<'a, str> {
+        self.to_string_lossy()
+    }
+}
+
+impl<'a> IntoFfprobeArg<'a> for PathBuf {
+    fn into_ffprobe_arg(self) -> Cow<'a, str> {
+        Cow::Owned(self.to_string_lossy().into_owned())
+    }
+}
+
+impl<'a> IntoFfprobeArg<'a> for Url {
+    fn into_ffprobe_arg(self) -> Cow<'a, str> {
+        Cow::Owned(self.to_string())
+    }
+}
+
+impl<'a> IntoFfprobeArg<'a> for &'a str {
+    fn into_ffprobe_arg(self) -> Cow<'a, str> {
+        self.into()
+    }
+}
+
+impl<'a> IntoFfprobeArg<'a> for String {
+    fn into_ffprobe_arg(self) -> Cow<'a, str> {
+        self.into()
+    }
+}
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
@@ -104,14 +141,17 @@ use std::os::windows::process::CommandExt;
 /// Execute ffprobe with default settings and return the extracted data.
 ///
 /// See [`ffprobe_config`] if you need to customize settings.
-pub fn ffprobe(path: impl AsRef<Path>) -> Result<FfProbe, FfProbeError> {
+pub fn ffprobe<'a, T: IntoFfprobeArg<'a>>(path: T) -> Result<FfProbe, FfProbeError> {
     ffprobe_config(Config::new(), path)
 }
 
 /// Run ffprobe with a custom config.
 /// See [`ConfigBuilder`] for more details.
-pub fn ffprobe_config(config: Config, path: impl AsRef<Path>) -> Result<FfProbe, FfProbeError> {
-    let path = path.as_ref();
+pub fn ffprobe_config<'a, T: IntoFfprobeArg<'a>>(
+    config: Config,
+    path: T,
+) -> Result<FfProbe, FfProbeError> {
+    let path = path.into_ffprobe_arg();
     let mut cmd = Command::new(config.ffprobe_bin);
     // Default args.
     cmd.args(["-v", "error", "-print_format", "json"]);
@@ -126,7 +166,7 @@ pub fn ffprobe_config(config: Config, path: impl AsRef<Path>) -> Result<FfProbe,
         cmd.arg("-count_frames");
     }
 
-    cmd.arg(path);
+    cmd.arg(path.as_ref());
 
     // Prevent CMD popup on Windows.
     #[cfg(target_os = "windows")]
@@ -142,15 +182,16 @@ pub fn ffprobe_config(config: Config, path: impl AsRef<Path>) -> Result<FfProbe,
 }
 
 #[cfg(feature = "async")]
-pub async fn ffprobe_async(path: impl AsRef<std::path::Path>) -> Result<FfProbe, FfProbeError> {
+pub async fn ffprobe_async<'a, T: IntoFfprobeArg<'a>>(path: T) -> Result<FfProbe, FfProbeError> {
     ffprobe_async_config(Config::new(), path).await
 }
 
 #[cfg(feature = "async")]
-pub async fn ffprobe_async_config(
+pub async fn ffprobe_async_config<'a, T: IntoFfprobeArg<'a>>(
     config: Config,
-    path: impl AsRef<Path>,
+    path: T,
 ) -> Result<FfProbe, FfProbeError> {
+    let path = path.into_ffprobe_arg();
     let mut cmd = tokio::process::Command::new("ffprobe");
     let path = path.as_ref();
     cmd.args(["-v", "quiet", "-print_format", "json"]);
@@ -165,7 +206,7 @@ pub async fn ffprobe_async_config(
         cmd.arg("-count_frames");
     }
 
-    cmd.arg(path);
+    cmd.arg(path.as_ref());
 
     let out = cmd.output().await.map_err(FfProbeError::Io)?;
 

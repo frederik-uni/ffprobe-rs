@@ -1,4 +1,4 @@
-use crate::{error::FfProbeError, ffprobe::FfProbe, ffprobe_config};
+use crate::{error::FfProbeError, ffprobe::FfProbe, ffprobe_config, IntoFfprobeArg};
 
 /// ffprobe configuration.
 ///
@@ -34,7 +34,7 @@ impl Config {
     }
 
     /// Run ffprobe with the config produced by this builder.
-    pub fn run(self, path: impl AsRef<std::path::Path>) -> Result<FfProbe, FfProbeError> {
+    pub fn run<'a, T: IntoFfprobeArg<'a>>(self, path: T) -> Result<FfProbe, FfProbeError> {
         ffprobe_config(self, path)
     }
 }
