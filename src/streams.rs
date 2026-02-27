@@ -66,6 +66,8 @@ impl Stream {
             StreamKinds::Subtitle(sub) => sub.duration_ts,
             StreamKinds::Attachment(attach) => Some(attach.duration_ts),
             StreamKinds::Data(v) => Some(v.duration_ts),
+            StreamKinds::Unknown => None,
+            StreamKinds::Nb => None,
         }
         .map(|d| {
             Duration::from_millis(
@@ -83,6 +85,8 @@ pub enum StreamKinds {
     Subtitle(SubtitleStream),
     Attachment(AttachmentStream),
     Data(DataStream),
+    Unknown,
+    Nb,
 }
 
 impl Serialize for StreamKinds {
@@ -96,13 +100,30 @@ impl Serialize for StreamKinds {
             StreamKinds::Subtitle(ref __field0) => Serialize::serialize(__field0, serializer),
             StreamKinds::Attachment(ref __field0) => Serialize::serialize(__field0, serializer),
             StreamKinds::Data(ref __field0) => Serialize::serialize(__field0, serializer),
+            StreamKinds::Unknown => serializer.serialize_none(),
+            StreamKinds::Nb => serializer.serialize_none(),
         }
     }
 }
 
 #[derive(Deserialize, Serialize)]
 struct StreamKindInfo {
-    codec_type: String,
+    pub codec_type: Option<MediaType>,
+}
+
+//https://ffmpeg.org/doxygen/trunk/group__lavu__misc.html#ga9a84bba4713dfced21a1a56163be1f48
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum MediaType {
+    Unknown,
+    Video,
+    Audio,
+    Data,
+    Subtitle,
+    Attachment,
+    Nb,
 }
 
 impl<'de> Deserialize<'de> for StreamKinds {
@@ -114,8 +135,8 @@ impl<'de> Deserialize<'de> for StreamKinds {
         let deserializer = || v.clone().into_deserializer();
         let mut err = None;
         if let Ok(kind) = StreamKindInfo::deserialize(deserializer()) {
-            match kind.codec_type.as_str() {
-                "audio" => {
+            match kind.codec_type {
+                Some(MediaType::Audio) => {
                     match Result::map(
                         <AudioStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Audio,
@@ -124,7 +145,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                         Err(e) => err = Some(e.to_string()),
                     }
                 }
-                "video" => {
+                Some(MediaType::Video) => {
                     match Result::map(
                         <VideoStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Video,
@@ -133,7 +154,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                         Err(e) => err = Some(e.to_string()),
                     }
                 }
-                "attachment" => {
+                Some(MediaType::Attachment) => {
                     match Result::map(
                         <AttachmentStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Attachment,
@@ -142,7 +163,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                         Err(e) => err = Some(e.to_string()),
                     }
                 }
-                "data" => {
+                Some(MediaType::Data) => {
                     match Result::map(
                         <DataStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Data,
@@ -151,7 +172,7 @@ impl<'de> Deserialize<'de> for StreamKinds {
                         Err(e) => err = Some(e.to_string()),
                     }
                 }
-                "subtitle" => {
+                Some(MediaType::Subtitle) => {
                     match Result::map(
                         <SubtitleStream as Deserialize>::deserialize(deserializer()),
                         StreamKinds::Subtitle,
@@ -160,7 +181,9 @@ impl<'de> Deserialize<'de> for StreamKinds {
                         Err(e) => err = Some(e.to_string()),
                     };
                 }
-                _ => {}
+                Some(MediaType::Nb) => return Ok(Self::Nb),
+                Some(MediaType::Unknown) => return Ok(Self::Unknown),
+                None => {}
             }
         }
         let msg = Value::deserialize(deserializer());
