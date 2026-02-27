@@ -1,8 +1,8 @@
 # ffprobe-rs
 
 
-[![crates.io](https://img.shields.io/crates/v/ffprobe?label=latest)](https://crates.io/crates/ffprobe)
-[![Documentation](https://docs.rs/ffprobe/badge.svg?version)](https://docs.rs/ffprobe)
+[![crates.io](https://img.shields.io/crates/v/ffprobe?label=latest)](https://crates.io/crates/easy-ffprobe)
+[![Documentation](https://docs.rs/ffprobe/badge.svg?version)](https://docs.rs/easy-ffprobe)
 
 Simple wrapper for the [ffprobe](https://ffmpeg.org/ffprobe.html) CLI utility,
 which is part of the ffmpeg tool suite.
