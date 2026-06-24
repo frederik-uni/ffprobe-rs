@@ -95,7 +95,6 @@ pub use streams::StreamTags;
 pub use subtitle_stream::SubtititleTags;
 #[cfg(feature = "streams")]
 pub use subtitle_stream::SubtitleStream;
-use url::Url;
 #[cfg(feature = "streams")]
 pub use video_stream::VideoStream;
 #[cfg(feature = "streams")]
@@ -117,7 +116,8 @@ impl<'a> IntoFfprobeArg<'a> for PathBuf {
     }
 }
 
-impl<'a> IntoFfprobeArg<'a> for Url {
+#[cfg(feature = "url")]
+impl<'a> IntoFfprobeArg<'a> for url::Url {
     fn into_ffprobe_arg(self) -> Cow<'a, str> {
         Cow::Owned(self.to_string())
     }
