@@ -44,6 +44,7 @@ pub struct VideoStream {
     pub chroma_location: Option<String>,
     /// Indicates the presence of closed captions in the video. (0/1)
     /// Closed captioning (CC) and subtitling are both processes of displaying text on a television, video screen, or other visual display to provide additional or interpretive information. Both are typically used as a transcription of the audio portion of a program as it occurs (either verbatim or in edited form), sometimes including descriptions of non-speech elements
+    #[serde(skip)]
     pub closed_captions: i64,
     /// Long name of the codec used for the video stream.
     pub codec_long_name: String,
@@ -70,6 +71,7 @@ pub struct VideoStream {
     // TODO: enum
     pub field_order: Option<String>,
     /// Indicates the presence of film grain in the video.
+    #[serde(skip)]
     pub film_grain: i64,
     /// Number of B-frames between I-frames and P-frames in the video.
     /// MPEG-2 includes three basic types of coded frames: intra-coded frames (I-frames), predictive-coded frames (P-frames), and bidirectionally-predictive-coded frames (B-frames).
@@ -96,6 +98,7 @@ pub struct VideoStream {
     pub duration_ts: Option<u64>,
     /// Number of reference frames in the video stream.
     /// TODO: Explain
+    #[serde(skip)]
     pub refs: i64,
     /// Metadata tags associated with the video stream.
     pub tags: Option<VideoTags>,
