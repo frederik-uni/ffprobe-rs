@@ -8,7 +8,7 @@
 //!
 //!
 //! ```rust
-//! match ffprobe::ffprobe("path/to/video.mp4") {
+//! match easy_ffprobe::ffprobe("path/to/video.mp4") {
 //!    Ok(info) => {
 //!        dbg!(info);
 //!    },
