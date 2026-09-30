@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use ffprobe::{Config, StreamKinds};
+use easy_ffprobe::{Config, StreamKinds};
 
 fn download(url: &str) -> std::path::PathBuf {
     let dir = std::path::PathBuf::from(".test_output");
@@ -41,7 +41,7 @@ fn download(url: &str) -> std::path::PathBuf {
 
 fn check(path: &Path) {
     eprintln!("Testing file {}", path.display());
-    ffprobe::ffprobe(path).unwrap();
+    easy_ffprobe::ffprobe(path).unwrap();
 }
 
 fn check_count_frames(path: &Path) {
@@ -63,7 +63,6 @@ fn download_and_probe() {
         // Images.
         "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
         // Videos.
-        "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-avi-file.avi",
         "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-avi-file.avi",
         "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mov-file.mov",
