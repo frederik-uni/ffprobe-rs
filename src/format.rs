@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::{
     option_string_to_duration,
-    streams::{option_string_to_int, string_to_int},
+    streams::{option_string_to_int, option_string_to_uint},
 };
 
 #[derive(Default, Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -15,7 +15,8 @@ pub struct Format {
     /// Number of programs
     pub nb_programs: u64,
     // Number of stream groups
-    pub nb_stream_groups: u64,
+    #[serde(deserialize_with = "option_string_to_uint", default)]
+    pub nb_stream_groups: Option<u64>,
     /// eg. matroska,webm
     pub format_name: String,
     /// eg. Matroska / WebM
@@ -25,11 +26,9 @@ pub struct Format {
     /// Length in seconds
     #[serde(deserialize_with = "option_string_to_duration", default)]
     pub duration: Option<Duration>,
-    // FIXME: wrap with Option<_> on next semver breaking release.
-    #[serde(default)]
     /// Size in bytes
-    #[serde(deserialize_with = "string_to_int")]
-    pub size: i64,
+    #[serde(deserialize_with = "option_string_to_int", default)]
+    pub size: Option<i64>,
     #[serde(deserialize_with = "option_string_to_int", default)]
     pub bit_rate: Option<i64>,
     ///value from 0-100

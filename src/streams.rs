@@ -269,6 +269,17 @@ where
     }
 }
 
+pub fn option_string_to_uint<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    match s {
+        Some(s) => s.parse::<u64>().map(Some).map_err(serde::de::Error::custom),
+        None => Ok(None),
+    }
+}
+
 pub fn string_to_int<'de, D>(deserializer: D) -> Result<i64, D::Error>
 where
     D: Deserializer<'de>,
